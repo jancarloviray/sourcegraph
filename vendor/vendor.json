@@ -182,6 +182,54 @@
 			"revisionTime": "2015-05-15T14:53:56Z"
 		},
 		{
+			"checksumSHA1": "aA9fKsu84AoN8xY38Et+K82MyKE=",
+			"path": "github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "YVg0U0XtPToXuve2TsqNb54Gq7o=",
+			"path": "github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway/descriptor",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "De4EmK9kqGZapa5lL+um9nYxNoM=",
+			"path": "github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway/generator",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "cs94EQxQ+AAu7MVxk3XxE6lsk2o=",
+			"path": "github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway/gengateway",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "CStTSGkJ4MYzCjO4PsEtZQvFfw8=",
+			"path": "github.com/gengo/grpc-gateway/protoc-gen-grpc-gateway/httprule",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "ObzBC/bTk889JrB0xQsy7F7vg8Y=",
+			"path": "github.com/gengo/grpc-gateway/runtime",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "8ViJGAkTxljD+XzQde1EYlmDTzI=",
+			"path": "github.com/gengo/grpc-gateway/third_party/googleapis/google/api",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
+			"checksumSHA1": "B3ebg4a6QHAw3qO9oCnny0E4gQs=",
+			"path": "github.com/gengo/grpc-gateway/utilities",
+			"revision": "2d6296edc95cfd124453f185ca9ba2ba3ae5122c",
+			"revisionTime": "2016-06-02T01:44:13Z"
+		},
+		{
 			"checksumSHA1": "mA1jCzbc+bGPzRPXXGdeTsRYs8U=",
 			"path": "github.com/getsentry/raven-go",
 			"revision": "dffeb57df75d6a911f00232155194e43d79d38d7",
@@ -207,10 +255,22 @@
 			"revisionTime": "2016-04-20T02:17:25Z"
 		},
 		{
+			"checksumSHA1": "HmbftipkadrLlCfzzVQ+iFHbl6g=",
+			"path": "github.com/golang/glog",
+			"revision": "23def4e6c14b4da8ac2ed8007337bc5eb5007998",
+			"revisionTime": "2016-01-25T20:49:56Z"
+		},
+		{
 			"checksumSHA1": "Bra/9XucW0ivjIalL27XqSw2dTk=",
 			"path": "github.com/golang/groupcache/lru",
 			"revision": "02826c3e79038b59d737d3b1c0a1d937f71a4433",
 			"revisionTime": "2016-05-16T00:07:52Z"
+		},
+		{
+			"checksumSHA1": "PKhaEMgdFISMGJBHrRIqLPv2/6E=",
+			"path": "github.com/golang/protobuf/jsonpb",
+			"revision": "3b06fc7a4cad73efce5fe6217ab6c33e7231ab4a",
+			"revisionTime": "2016-06-01T15:17:05Z"
 		},
 		{
 			"checksumSHA1": "4BxT1r53xaajIzWop5H+lm9eVwM=",
@@ -221,6 +281,12 @@
 		{
 			"checksumSHA1": "+cT5a/FtqhkUAnVuajBTUAS2iHU=",
 			"path": "github.com/golang/protobuf/protoc-gen-go/descriptor",
+			"revision": "3b06fc7a4cad73efce5fe6217ab6c33e7231ab4a",
+			"revisionTime": "2016-06-01T15:17:05Z"
+		},
+		{
+			"checksumSHA1": "+HzWSuzFeDqy4tLCRiozPk5Zj3M=",
+			"path": "github.com/golang/protobuf/protoc-gen-go/generator",
 			"revision": "3b06fc7a4cad73efce5fe6217ab6c33e7231ab4a",
 			"revisionTime": "2016-06-01T15:17:05Z"
 		},

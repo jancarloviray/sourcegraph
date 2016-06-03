@@ -22,6 +22,7 @@ import (
 	"gopkg.in/inconshreveable/log15.v2"
 
 	"github.com/NYTimes/gziphandler"
+	"github.com/gengo/grpc-gateway/runtime"
 	"github.com/gorilla/mux"
 	"github.com/keegancsmith/tmpfriend"
 	"github.com/soheilhy/cmux"
@@ -311,6 +312,8 @@ func (c *ServeCmd) Execute(args []string) error {
 		return router
 	}
 	sm.Handle("/.api/", gziphandler.GzipHandler(httpapi.NewHandler(router.New(subRouter(newRouter().PathPrefix("/.api/"))))))
+	grpcAPIMux := runtime.NewServeMux()
+	sm.Handle("/.grpc-api/", gziphandler.GzipHandler(http.StripPrefix("/.grpc-api", grpcAPIMux)))
 	sm.Handle("/", gziphandler.GzipHandler(app.NewHandlerWithCSRFProtection(app.NewHandler(app_router.New(newRouter())))))
 	sm.Handle(assets.URLPathPrefix+"/", http.StripPrefix(assets.URLPathPrefix, assets.NewHandler(newRouter())))
 
@@ -434,6 +437,28 @@ func (c *ServeCmd) Execute(args []string) error {
 		l = tls.NewListener(l, srv.TLSConfig)
 
 		serveHTTPS(l, &srv, c.HTTPSAddr)
+	}
+
+	// TODO: Replace this with a proper implementation. This is a sample for local testing only.
+	setupGRPCGateway := func() error {
+		ctx := context.Background()
+		//ctx, cancel := context.WithCancel(ctx)
+		//defer cancel()
+
+		opts := []grpc.DialOption{
+			grpc.WithInsecure(),
+			grpc.WithCodec(sourcegraph.GRPCCodec),
+		}
+		err := sourcegraph.RegisterReposHandlerFromEndpoint(ctx, grpcAPIMux, "127.0.0.1:3080", opts)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+	err = setupGRPCGateway()
+	if err != nil {
+		return err
 	}
 
 	// Connection test

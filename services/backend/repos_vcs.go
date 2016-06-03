@@ -133,6 +133,12 @@ func (s *repos) ListBranches(ctx context.Context, op *sourcegraph.ReposListBranc
 		return nil, err
 	}
 
+	// TODO: Does this belong here or elsewhere?
+	if op.Opt == nil {
+		// Set defaults for optional options.
+		op.Opt = &sourcegraph.RepoListBranchesOptions{}
+	}
+
 	branches, err := vcsrepo.Branches(vcs.BranchesOptions{
 		IncludeCommit:     op.Opt.IncludeCommit,
 		BehindAheadBranch: op.Opt.BehindAheadBranch,

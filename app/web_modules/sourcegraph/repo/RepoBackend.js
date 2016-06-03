@@ -114,7 +114,8 @@ const RepoBackend = {
 				let branches = RepoStore.branches.list(action.repo);
 				if (branches === null) {
 					trackPromise(
-						RepoBackend.fetch(`/.api/repos/${action.repo}/-/branches?IncludeCommit=true&PerPage=1000`)
+						// TOOD: Find a way to be able to use ?PerPage=123 rather than ?Opt.ListOptions.PerPage=123.
+						RepoBackend.fetch(`/.grpc-api/repos/${action.repo}/-/branches?Opt.IncludeCommit=true&Opt.ListOptions.PerPage=1000`)
 							.then(checkStatus)
 							.then((resp) => resp.json())
 							.catch((err) => {

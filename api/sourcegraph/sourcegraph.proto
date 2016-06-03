@@ -1,6 +1,8 @@
 syntax = "proto3";
 package sourcegraph;
 
+import "google/api/annotations.proto";
+
 import "github.com/gogo/protobuf/gogoproto/gogo.proto";
 import "sourcegraph.com/sourcegraph/go-diff/diff/diff.proto";
 import "sourcegraph.com/sourcegraph/sourcegraph/pkg/vcs/vcs.proto";
@@ -256,7 +258,14 @@ service Repos {
 	// commits with a maximum of DefaultPerPage entries. To retrieve all commits
 	// the PerPage value can be set to -1.
 	rpc ListCommits(ReposListCommitsOp) returns (CommitList);
-	rpc ListBranches(ReposListBranchesOp) returns (BranchList);
+
+	rpc ListBranches(ReposListBranchesOp) returns (BranchList) {
+		option (google.api.http) = {
+			// TODO: Add documentation, examples, metadata, etc., here.
+			get: "/repos/{Repo.URI=**}/-/branches"
+		};
+	}
+
 	rpc ListTags(ReposListTagsOp) returns (TagList);
 
 	// ListCommitters returns the list of authors who have contributed

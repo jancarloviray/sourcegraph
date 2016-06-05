@@ -74,7 +74,7 @@ func VerifyActorHasReadAccess(ctx context.Context, actor auth.Actor, method, rep
 	// Delegate permissions check to GitHub for GitHub mirrored repos.
 	if strings.HasPrefix(strings.ToLower(repo), "github.com/") {
 		if !VerifyScopeHasAccess(ctx, actor.Scope, method, repo) {
-			_, err := (&github.Repos{}).Get(ctx, repo)
+			_, err := github.ReposFromContext(ctx).Get(ctx, repo)
 			if err != nil {
 				// We don't know if the error is unauthenticated or unauthorized, so return unauthenticated
 				// so that git clients will try again, providing authentication information.
@@ -123,7 +123,7 @@ func VerifyActorHasWriteAccess(ctx context.Context, actor auth.Actor, method, re
 	// Delegate permissions check to GitHub for GitHub mirrored repos.
 	if strings.HasPrefix(strings.ToLower(repo), "github.com/") {
 		if !VerifyScopeHasAccess(ctx, actor.Scope, method, repo) {
-			_, err := (&github.Repos{}).Get(ctx, repo)
+			_, err := github.ReposFromContext(ctx).Get(ctx, repo)
 			if err != nil {
 				// We don't know if the error is unauthenticated or unauthorized, so return unauthenticated
 				// so that git clients will try again, providing authentication information.

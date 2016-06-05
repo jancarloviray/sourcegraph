@@ -429,6 +429,9 @@ message ReposUpdateOp {
 
 	// DefaultBranch is the repo's new default branch.
 	string DefaultBranch = 6;
+
+	// Fork is whether this repository is a fork.
+	bool Fork = 7;
 };
 
 message ReposListCommitsOp {

@@ -221,7 +221,6 @@ class DefInfo extends Container {
 									<TabItem active={refsSorting === "all"}>All</TabItem>
 								</Link>
 							</div>
-							<hr style={{marginTop: 0, clear: "both"}}/>
 							{refsSorting === "top" &&
 								<RepoRefsContainer
 									repo={this.props.repo}

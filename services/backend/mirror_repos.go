@@ -74,7 +74,7 @@ func (s *mirrorRepos) RefreshVCS(ctx context.Context, op *sourcegraph.MirrorRepo
 		log15.Error("RefreshVCS: failed to open VCS", "error", err, "URI", repo.URI)
 		return nil, err
 	}
-	if err := s.updateRepo(ctx, repo, vcsRepo, remoteOpts); err != nil {
+	if err := s.updateRepo(ctx, repo, vcsRepo, remoteOpts, sourcegraph.UserSpec{UID: asUserUID}); err != nil {
 		if !vcs.IsRepoNotExist(err) {
 			log15.Error("RefreshVCS: update repo failed unexpectedly", "error", err, "repo", repo.URI)
 			return nil, err
@@ -86,6 +86,9 @@ func (s *mirrorRepos) RefreshVCS(ctx context.Context, op *sourcegraph.MirrorRepo
 		if err := s.cloneRepo(ctx, repo, remoteOpts); err != nil {
 			log15.Info("RefreshVCS: cloneRepo failed", "error", err, "repo", repo.URI)
 			return nil, err
+		}
+		if err := s.createBuildForDefaultBranch(ctx, repo, sourcegraph.UserSpec{UID: asUserUID}); err != nil {
+			log15.Info("RefreshVCS: createBuildForDefaultBranch failed", "error", err, "repo", repo.URI)
 		}
 	}
 
@@ -115,7 +118,10 @@ func (s *mirrorRepos) cloneRepo(ctx context.Context, repo *sourcegraph.Repo, rem
 	if err != nil && err != vcs.ErrRepoExist {
 		return err
 	}
+	return nil
+}
 
+func (s *mirrorRepos) createBuildForDefaultBranch(ctx context.Context, repo *sourcegraph.Repo, asUser sourcegraph.UserSpec) error {
 	// We've just cloned the repository, so kick off a build on the default
 	// branch. This isn't needed for the fs backend because it initializes an
 	// empty repository first and then proceeds to just updateRepo, thus skipping
@@ -130,18 +136,19 @@ func (s *mirrorRepos) cloneRepo(ctx context.Context, repo *sourcegraph.Repo, rem
 	_, err = svc.Builds(ctx).Create(elevatedActor(ctx), &sourcegraph.BuildsCreateOp{
 		Repo:     repo.ID,
 		CommitID: res.CommitID,
+		User:     &asUser,
 		Branch:   repo.DefaultBranch,
 		Config:   sourcegraph.BuildConfig{Queue: true},
 	})
 	if err != nil {
-		log15.Warn("cloneRepo: failed to create build", "err", err, "repo", repo.URI, "commit", res.CommitID, "branch", repo.DefaultBranch)
+		log15.Warn("cloneRepo: failed to create build", "err", err, "repo", repo.URI, "commit", res.CommitID, "asUser", asUser.UID, "branch", repo.DefaultBranch)
 		return nil
 	}
-	log15.Debug("cloneRepo: build created", "repo", repo.URI, "branch", repo.DefaultBranch, "commit", res.CommitID)
+	log15.Debug("cloneRepo: build created", "repo", repo.URI, "branch", repo.DefaultBranch, "commit", res.CommitID, "asUser", asUser.UID)
 	return nil
 }
 
-func (s *mirrorRepos) updateRepo(ctx context.Context, repo *sourcegraph.Repo, vcsRepo vcs.Repository, remoteOpts vcs.RemoteOpts) error {
+func (s *mirrorRepos) updateRepo(ctx context.Context, repo *sourcegraph.Repo, vcsRepo vcs.Repository, remoteOpts vcs.RemoteOpts, asUser sourcegraph.UserSpec) error {
 	// TODO: Need to detect new tags and copy git_transport.go in event publishing
 	// behavior.
 
@@ -192,7 +199,7 @@ func (s *mirrorRepos) updateRepo(ctx context.Context, repo *sourcegraph.Repo, vc
 			// Publish the event.
 			// TODO: what about GitPayload.ContentEncoding field?
 			events.Publish(eventType, events.GitPayload{
-				Actor:       authpkg.ActorFromContext(ctx).UserSpec(),
+				Actor:       asUser,
 				Repo:        repo.ID,
 				IgnoreBuild: change.Branch != repo.DefaultBranch,
 				Event: githttp.Event{
@@ -219,7 +226,7 @@ func (s *mirrorRepos) updateRepo(ctx context.Context, repo *sourcegraph.Repo, vc
 			// Branch was deleted.
 			// TODO: what about GitPayload.ContentEncoding field?
 			events.Publish(events.GitDeleteBranchEvent, events.GitPayload{
-				Actor: authpkg.ActorFromContext(ctx).UserSpec(),
+				Actor: asUser,
 				Repo:  repo.ID,
 				Event: githttp.Event{
 					Type:   githttp.PUSH,
@@ -239,7 +246,7 @@ func (s *mirrorRepos) updateRepo(ctx context.Context, repo *sourcegraph.Repo, vc
 		// Publish an event for the new commits pushed.
 		// TODO: what about GitPayload.ContentEncoding field?
 		events.Publish(events.GitPushEvent, events.GitPayload{
-			Actor: authpkg.ActorFromContext(ctx).UserSpec(),
+			Actor: asUser,
 			Repo:  repo.ID,
 			Event: githttp.Event{
 				Type:   githttp.PUSH,

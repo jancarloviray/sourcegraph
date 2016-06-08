@@ -186,14 +186,8 @@ function cacheDefaultBranch(annURL) {
 		fetchingDefaultBranchCache[repo] = true;
 		fetch(`https://sourcegraph.com/.api/repos/${repo}`)
 			.then((response) => {
-				if (response.ok) {
-					defaultBranchCache[repo] = response.DefaultBranch;
-					fetchingDefaultBranchCache[repo] = false;
-				} else {
-					// Fall back onto master if we can't get the default branch
-					defaultBranchCache[repo] = "master";
-					fetchingDefaultBranchCache[repo] = false;
-				}
+				defaultBranchCache[repo] = response.ok ? response.DefaultBranch : "master";
+				fetchingDefaultBranchCache[repo] = false;
 			})
 			.catch((err) => console.log("Error getting default branch"))
 	}

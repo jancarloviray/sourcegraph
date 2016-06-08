@@ -156,15 +156,53 @@ export class EventLogger {
 
 	// sets current user's properties
 	setUserProperty(property, value) {
+		window.ga("set", property, value);
 		this._amplitude.identify(new this._amplitude.Identify().set(property, value));
 	}
 
 	// records events for the current user, if user agent is not bot
+	// isNonInteraction is to filter out ViewEvents
 	logEvent(eventName, eventProperties) {
+		if (this.userAgentIsBot) {
+			return;
+		}
+
 		if (typeof window !== "undefined" && window.localStorage["event-log"]) {
 			console.debug("%cEVENT %s", "color: #aaa", eventName, eventProperties);
 		}
 		this._amplitude.logEvent(eventName, eventProperties);
+
+		window.ga("send", {
+			hitType: "event",
+			eventCategory: "Action",
+			eventAction: eventName,
+			eventLabel: this._user ? "AuthedEvent" : "UnAuthedEvent",
+		});
+	}
+
+	// Use this to fire off VIEW events. Google analytics does not let us send in a dictionary of props so trackers
+	// that are limited should leverage logViewEvent instead of logEvent. Amplitude also does not track "View" events,
+	// they only support "Events"
+	logViewEvent(location, page, eventProperties) {
+		if (this.userAgentIsBot) {
+			return;
+		}
+
+		// Log Amplitude "View" event
+		this._amplitude.logEvent(location, eventProperties);
+
+		// Log GA "pageview" event without props.
+		window.ga("send", {
+			hitType: "pageview",
+			location: location,
+			page: page,
+		});
+	}
+
+	logEventForCategory(eventName, eventCategory, eventAction, eventLabel, eventProperties) {
+		if (this.userAgentIsBot) {
+			return;
+		}
 	}
 
 	logEventForPage(eventName, pageName, eventProperties) {
@@ -173,6 +211,14 @@ export class EventLogger {
 		let props = eventProperties ? eventProperties : {};
 		props["page_name"] = pageName;
 		this.logEvent(eventName, props);
+	}
+
+	handleOutboundLinkClicks(event) {
+		window.ga("send", "event", {
+			eventCategory: "Outbound Link",
+			eventAction: "click",
+			eventLabel: event.target.href,
+		});
 	}
 
 	// sets current user's property value
@@ -371,15 +417,12 @@ export function withViewEventsLogged(Component: ReactClass): ReactClass {
 					referred_by_sourcegraph_editor: location.query["editor_type"],
 				};
 			}
-
+			// Log GA stuff in here for views.
 			const viewName = getViewName(routes);
 			if (viewName) {
-				this.context.eventLogger.logEvent(viewName, eventProps);
+				this.context.eventLogger.logViewEvent(viewName, location.pathname, eventProps);
 			} else {
-				this.context.eventLogger.logEvent("UnmatchedRoute", {
-					...eventProps,
-					pattern: getRoutePattern(routes),
-				});
+				this.context.eventLogger.logViewEvent("UnmatchedRoute", location.pathname, {...eventProps, pattern: getRoutePattern(routes)});
 			}
 		}
 

@@ -170,6 +170,14 @@ func (g *globalDefs) Search(ctx context.Context, op *store.GlobalDefSearchOp) (*
 			wheres = append(wheres, `lower(unit_type)=lower(`+arg(op.UnitTypeQuery)+`)`)
 		}
 
+		if len(op.Kinds) > 0 {
+			var kindList []string
+			for _, kind := range op.Kinds {
+				kindList = append(kindList, arg(kind))
+			}
+			wheres = append(wheres, `kind IN (`+strings.Join(kindList, ", ")+`)`)
+		}
+
 		if len(op.TokQuery) == 1 { // special-case single token queries for performance
 			wheres = append(wheres, `lower(name)=lower(`+arg(op.TokQuery[0])+`)`)
 

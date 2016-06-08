@@ -29,6 +29,7 @@ var tokenToKind = map[string]string{
 	"var":     "var",
 	"field":   "field",
 	"package": "package",
+	"pkg":     "package",
 	"const":   "const",
 }
 
@@ -55,9 +56,13 @@ func (s *search) Search(ctx context.Context, op *sourcegraph.SearchOp) (*sourceg
 			unit = strings.TrimPrefix(token, "t:")
 			continue
 		}
-		if kind, exist := tokenToKind[token]; exist {
-			kinds = append(kinds, kind)
-			continue
+
+		for key, kind := range tokenToKind {
+			if strings.HasPrefix(token, key) {
+				unit = strings.TrimPrefix(token, key)
+				kinds = append(kinds, kind)
+				break
+			}
 		}
 
 		// function shorthand, still include token as a descriptor token
@@ -75,9 +80,9 @@ func (s *search) Search(ctx context.Context, op *sourcegraph.SearchOp) (*sourceg
 	results, err := store.GlobalDefsFromContext(ctx).Search(ctx, &store.GlobalDefSearchOp{
 		UnitQuery:     unit,
 		UnitTypeQuery: unitType,
-
-		TokQuery: descToks,
-		Opt:      op.Opt,
+		Kinds:         kinds,
+		TokQuery:      descToks,
+		Opt:           op.Opt,
 	})
 	if err != nil {
 		return nil, err

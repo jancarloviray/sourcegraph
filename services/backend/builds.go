@@ -91,6 +91,7 @@ func (s *builds) Create(ctx context.Context, op *sourcegraph.BuildsCreateOp) (*s
 	b := &sourcegraph.Build{
 		Repo:        repo.ID,
 		CommitID:    op.CommitID,
+		User:        op.User,
 		Branch:      op.Branch,
 		Tag:         op.Tag,
 		CreatedAt:   pbtypes.NewTimestamp(time.Now()),

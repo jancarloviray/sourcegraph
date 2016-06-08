@@ -9,6 +9,7 @@ import (
 
 	"golang.org/x/net/context"
 	"sourcegraph.com/sourcegraph/sourcegraph/api/sourcegraph"
+	"sourcegraph.com/sourcegraph/sourcegraph/pkg/auth"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/auth/idkey"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/jsonutil"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/store"
@@ -21,6 +22,15 @@ func assertBuildExists(ctx context.Context, s store.Builds, want *sourcegraph.Bu
 	if err != nil {
 		t.Fatalf("errored out: %s", err)
 	}
+
+	// Simplify use of User in tests
+	if want.User == nil {
+		u := auth.ActorFromContext(ctx).UserSpec()
+		want.User = &u
+	}
+	want.User.Login = ""
+	b.User.Login = ""
+
 	if !reflect.DeepEqual(b, want) {
 		t.Errorf("expected %#v, got %#v", want, b)
 	}
@@ -152,7 +162,7 @@ func TestBuilds_Create(t *testing.T) {
 	defer done()
 
 	s := &builds{}
-	want := &sourcegraph.Build{ID: 33, Repo: 1, CommitID: strings.Repeat("a", 40), Host: "localhost"}
+	want := &sourcegraph.Build{ID: 33, Repo: 1, CommitID: strings.Repeat("a", 40), User: &sourcegraph.UserSpec{UID: 5}, Host: "localhost"}
 	b, err := s.Create(ctx, want)
 	if err != nil {
 		t.Fatalf("errored out: %s", err)

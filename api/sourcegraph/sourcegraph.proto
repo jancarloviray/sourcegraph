@@ -616,6 +616,9 @@ message Build {
 	// CommitID is the full resolved commit ID to build.
 	string CommitID = 3;
 
+	// User is who created the build, or who the build was created for.
+	UserSpec User = 16;
+
 	// Branch, if set, is the name of the VCS branch on which this
 	// commit was built. Commits may be configured to be built in
 	// different ways depending on the branch the build was started on
@@ -685,6 +688,9 @@ message BuildJob {
 
 	// CommitID is the full resolved commit ID to build.
 	string CommitID = 3;
+
+	// User is the user who to build on behalf of.
+	UserSpec User = 17;
 
 	// Branch, if set, is the name of the VCS branch on which this
 	// commit was built. See Build.Branch.
@@ -812,6 +818,10 @@ message BuildsCreateOp {
 	// CommitID is the full commit ID of the commit to build. It is
 	// required.
 	string CommitID = 2;
+
+	// User is who to create the build for. This is the current user by
+	// default, and can only be set by internal authed scopes.
+	UserSpec User = 6;
 
 	// Branch, if specified, indicates that this build's commit is on
 	// the given branch. If Branch is set, Tag must be empty.

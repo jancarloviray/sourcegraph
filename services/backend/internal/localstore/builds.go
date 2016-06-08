@@ -12,6 +12,7 @@ import (
 	"gopkg.in/gorp.v1"
 	"gopkg.in/inconshreveable/log15.v2"
 	"sourcegraph.com/sourcegraph/sourcegraph/api/sourcegraph"
+	"sourcegraph.com/sourcegraph/sourcegraph/pkg/auth"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/auth/idkey"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/auth/sharedsecret"
 	"sourcegraph.com/sourcegraph/sourcegraph/pkg/store"
@@ -27,6 +28,8 @@ func init() {
 		`ALTER TABLE repo_build ALTER COLUMN ended_at TYPE timestamp with time zone USING ended_at::timestamp with time zone;`,
 		`ALTER TABLE repo_build ALTER COLUMN heartbeat_at TYPE timestamp with time zone USING ended_at::timestamp with time zone;`,
 		`ALTER TABLE repo_build ALTER COLUMN builder_config TYPE text;`,
+		`ALTER TABLE repo_build ALTER COLUMN user_id SET DEFAULT 0;`,
+		`ALTER TABLE repo_build ALTER COLUMN user_id SET NOT NULL;`,
 		`CREATE INDEX repo_build_priority ON repo_build(priority);`,
 		`create index repo_build_created_at on repo_build(created_at desc nulls last);`,
 		`create index repo_build_updated_at on repo_build((greatest(started_at, ended_at, created_at)) desc nulls last);`,
@@ -69,6 +72,7 @@ type dbBuild struct {
 	ID            uint64
 	Repo          int32  `db:"repo_id"`
 	CommitID      string `db:"commit_id"`
+	User          int    `db:"user_id"`
 	Branch        string
 	Tag           string
 	CreatedAt     time.Time  `db:"created_at"`
@@ -89,6 +93,7 @@ func (b *dbBuild) toBuild() *sourcegraph.Build {
 	return &sourcegraph.Build{
 		ID:          b.ID,
 		Repo:        b.Repo,
+		User:        &sourcegraph.UserSpec{UID: int32(b.User)},
 		CommitID:    b.CommitID,
 		Branch:      b.Branch,
 		Tag:         b.Tag,
@@ -127,6 +132,9 @@ func (b *dbBuild) fromBuild(b2 *sourcegraph.Build) {
 	b.Queue = b2.Queue
 	b.Priority = int(b2.Priority)
 	b.BuilderConfig = b2.BuilderConfig
+	if b2.User != nil {
+		b.User = int(b2.User.UID)
+	}
 }
 
 func toBuilds(bs []*dbBuild) []*sourcegraph.Build {
@@ -319,6 +327,19 @@ func (s *builds) Create(ctx context.Context, newBuild *sourcegraph.Build) (*sour
 	if err := accesscontrol.VerifyUserHasReadAccess(ctx, "Builds.Create", newBuild.Repo); err != nil {
 		return nil, err
 	}
+	// Validate op.User is the current user or service account
+	if newBuild.User != nil {
+		if err := accesscontrol.VerifyUserSelfOrAdmin(ctx, "Builds.Create", newBuild.User.UID); err != nil {
+			return nil, err
+		}
+	} else {
+		u := auth.ActorFromContext(ctx).UserSpec()
+		newBuild.User = &u
+		// We explictly clear out login since we are only interested
+		// in UID
+		newBuild.User.Login = ""
+	}
+
 	var b dbBuild
 	b.fromBuild(newBuild)
 
@@ -330,10 +351,10 @@ func (s *builds) Create(ctx context.Context, newBuild *sourcegraph.Build) (*sour
 
 	// Construct SQL manually so we can retrieve the id # from
 	// the DB trigger.
-	sql := `INSERT INTO repo_build(id, repo_id, commit_id, branch, tag, created_at, started_at, ended_at, heartbeat_at,
+	sql := `INSERT INTO repo_build(id, repo_id, commit_id, user_id, branch, tag, created_at, started_at, ended_at, heartbeat_at,
                                    success, failure, killed, host, purged, queue, priority, builder_config)
-            VALUES(` + arg(b.ID) + `, ` + arg(b.Repo) + `, ` + arg(b.CommitID) + `, ` + arg(b.Branch) + `, ` + arg(b.Tag) + `, ` + arg(b.CreatedAt) + `, ` + arg(b.StartedAt) + `,` +
-		arg(b.EndedAt) + `,` + arg(b.HeartbeatAt) + `, ` + arg(b.Success) + `, ` + arg(b.Failure) + `, ` + arg(b.Killed) + `, ` +
+            VALUES(` + arg(b.ID) + `, ` + arg(b.Repo) + `, ` + arg(b.CommitID) + `, ` + arg(b.User) + `, ` + arg(b.Branch) + `, ` + arg(b.Tag) + `, ` + arg(b.CreatedAt) + `, ` + arg(b.StartedAt) + `, ` +
+		arg(b.EndedAt) + `, ` + arg(b.HeartbeatAt) + `, ` + arg(b.Success) + `, ` + arg(b.Failure) + `, ` + arg(b.Killed) + `, ` +
 		arg(b.Host) + `, ` + arg(b.Purged) + `, ` + arg(b.Queue) + `, ` + arg(b.Priority) + `, ` + arg(b.BuilderConfig) + `)
             RETURNING id;`
 	id, err := appDBH(ctx).SelectInt(sql, args...)
@@ -542,6 +563,7 @@ func newBuildJob(ctx context.Context, b *sourcegraph.Build) (*sourcegraph.BuildJ
 	return &sourcegraph.BuildJob{
 		Spec:        b.Spec(),
 		CommitID:    b.CommitID,
+		User:        b.User,
 		Branch:      b.Branch,
 		Tag:         b.Tag,
 		AccessToken: tok.AccessToken,

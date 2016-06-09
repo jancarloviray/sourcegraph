@@ -64,7 +64,7 @@ class ToolsHomeComponent extends Component {
 	}
 
 	_toolClicked(toolType) {
-		this.context.eventLogger.logEventForPage("ToolCTAClicked", "DashboardTools", {toolType: toolType});
+		this.context.eventLogger.logEventForCategory("tools", "click", "ToolCTAClicked", {toolType: toolType, page_name: "DashboardTools"});
 		this.context.router.replace({...this.props.location, query: {tool: toolType}});
 	}
 
@@ -87,26 +87,26 @@ class ToolsHomeComponent extends Component {
 	}
 
 	_browserLearnMoreCTAClicked() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionStoreCTAClicked", "DashboardTools");
+		this.context.eventLogger.logEventForCategory("tools", "click", "ChromeExtensionStoreCTAClicked", {page_name: "DashboardTools"});
 		window.location.href("https://chrome.google.com/webstore/detail/sourcegraph-for-github/dgjhfomjieaadpoljlnidmbgkdffpack?hl=en");
 	}
 
 	_successHandler() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionInstalled", "DashboardTools");
+		this.context.eventLogger.logEventForCategory("tools", "success", "ChromeExtensionInstalled", {page_name: "DashboardTools"});
 		this.context.eventLogger.setUserProperty("installed_chrome_extension", "true");
 		this.setState({showChromeExtensionCTA: false});
 		window.localStorage["installed_chrome_extension"] = true;
 	}
 
 	_failHandler() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionInstallFailed", "DashboardTools");
+		this.context.eventLogger.logEventForCategory("tools", "error", "ChromeExtensionInstallFailed", {page_name: "DashboardTools"});
 		this.context.eventLogger.setUserProperty("installed_chrome_extension", "false");
 		this.setState({showChromeExtensionCTA: true});
 		window.localStorage.removeItem("installed_chrome_extension");
 	}
 
 	_installChromeExtensionClicked() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionCTAClicked", "DashboardTools");
+		this.context.eventLogger.logEventForCategory("tools", "click", "ChromeExtensionCTAClicked", {page_name: "DashboardTools"});
 		if (global.chrome) {
 			global.chrome.webstore.install("https://chrome.google.com/webstore/detail/dgjhfomjieaadpoljlnidmbgkdffpack", this._successHandler.bind(this), this._failHandler.bind(this));
 		}
@@ -121,12 +121,12 @@ class ToolsHomeComponent extends Component {
 	}
 
 	_installEditorForSublimeCTAClicked() {
-		this.context.eventLogger.logEventForPage("SourcegraphLiveCTAClicked", "DashboardTools", {editorType: "Sublime"});
+		this.context.eventLogger.logEventForCategory("tools", "click", "SourcegraphLiveCTAClicked", {page_name: "DashboardTools", editorType: "Sublime"});
 		window.location.assign("https://packagecontrol.io/packages/Sourcegraph");
 	}
 
 	_installEditorForEmacsCTAClicked() {
-		this.context.eventLogger.logEventForPage("SourcegraphLiveCTAClicked", "DashboardTools", {editorType: "Emacs"});
+		this.context.eventLogger.logEventForCategory("tools", "click", "SourcegraphLiveCTAClicked", {page_name: "DashboardTools", editorType: "Emacs"});
 		window.location.assign("https://github.com/sourcegraph/sourcegraph/tree/master/client/emacs");
 	}
 
@@ -144,7 +144,7 @@ class ToolsHomeComponent extends Component {
 	}
 
 	_connectGitHubClicked() {
-		this.context.eventLogger.logEventForPage("InitiateGitHubOAuth2Flow", "DashboardTools", {scopes: "", upgrade: true});
+		this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow", {page_name: "DashboardTools", scopes: "", upgrade: true});
 		window.open(urlToGitHubOAuth);
 	}
 

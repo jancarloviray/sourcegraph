@@ -36,33 +36,33 @@ class TourContainer extends React.Component {
 	}
 
 	_successHandler() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionInstalled", "DashboardTour");
+		this.context.eventLogger.logEventForCategory("tools", "install", "ChromeExtensionInstalled", {page_name: "DashboardTour"});
 		this.context.eventLogger.setUserProperty("installed_chrome_extension", "true");
 		this.setState({showChromeExtensionCTA: false});
 		window.localStorage["installed_chrome_extension"] = true;
 	}
 
 	_failHandler() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionInstallFailed", "DashboardTour");
+		this.context.eventLogger.logEventForCategory("tools", "error", "ChromeExtensionInstallFailed", {page_name: "DashboardTour"});
 		this.context.eventLogger.setUserProperty("installed_chrome_extension", "false");
 		this.setState({showChromeExtensionCTA: true});
 		window.localStorage.removeItem("installed_chrome_extension");
 	}
 
 	_installChromeExtensionClicked() {
-		this.context.eventLogger.logEventForPage("ChromeExtensionCTAClicked", "DashboardTour");
+		this.context.eventLogger.logEventForCategory("tools", "click", "ChromeExtensionCTAClicked", {page_name: "DashboardTour"});
 		if (global.chrome) {
 			global.chrome.webstore.install("https://chrome.google.com/webstore/detail/dgjhfomjieaadpoljlnidmbgkdffpack", this._successHandler.bind(this), this._failHandler.bind(this));
 		}
 	}
 
 	_connectGitHubClicked() {
-		this.context.eventLogger.logEventForPage("InitiateGitHubOAuth2Flow", "DashboardTour", {scopes: "", upgrade: true});
+		this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow", {page_name: "DashboardTour", scopes: "", upgrade: true});
 		window.open(urlToGitHubOAuth);
 	}
 
 	_installSourcegraphLiveClicked() {
-		this.context.eventLogger.logEventForPage("SourcegraphLiveCTAClicked", "DashboardTour");
+		this.context.eventLogger.logEventForCategory("tools", "click", "SourcegraphLiveCTAClicked", {page_name: "DashboardTour"});
 		window.localStorage["installed_sourcegraph_live"] = true;
 		this.setState({showSourcegraphLiveCTA: false});
 		window.location.assign("https://github.com/sourcegraph/sourcegraph-sublime");

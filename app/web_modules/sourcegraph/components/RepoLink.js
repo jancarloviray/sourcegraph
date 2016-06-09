@@ -36,7 +36,7 @@ class RepoLink extends React.Component {
 						title={trimmedPath}
 						key={i}
 						styleName={isLast ? "active" : "inactive"}
-						onClick={() => this.context.eventLogger.logEvent("RepoClicked", {repoName: trimmedPath})}>
+						onClick={() => this.context.eventLogger.logEventForCategory("repository", "click", "RepoClicked", {repoName: trimmedPath})}>
 						{component}
 					</Link> :
 					<span key={i}>{component}</span>

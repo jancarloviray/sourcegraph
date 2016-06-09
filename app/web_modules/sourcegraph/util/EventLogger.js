@@ -125,6 +125,7 @@ export class EventLogger {
 
 			if (authInfo) {
 				if (this._amplitude && authInfo.Login) this._amplitude.setUserId(authInfo.Login || null);
+				if (window.ga && authInfo.Login) window.ga("set", "user_id", authInfo.Login);
 				if (authInfo.UID) this.setIntercomProperty("user_id", authInfo.UID.toString());
 				if (authInfo.IntercomHash) this.setIntercomProperty("user_hash", authInfo.IntercomHash);
 				if (this._fullStory && authInfo.Login) {
@@ -156,7 +157,6 @@ export class EventLogger {
 
 	// sets current user's properties
 	setUserProperty(property, value) {
-		window.ga("set", property, value);
 		this._amplitude.identify(new this._amplitude.Identify().set(property, value));
 	}
 
@@ -170,13 +170,13 @@ export class EventLogger {
 		if (typeof window !== "undefined" && window.localStorage["event-log"]) {
 			console.debug("%cEVENT %s", "color: #aaa", eventName, eventProperties);
 		}
+
 		this._amplitude.logEvent(eventName, eventProperties);
 
 		window.ga("send", {
 			hitType: "event",
 			eventCategory: "Action",
 			eventAction: eventName,
-			eventLabel: this._user ? "AuthedEvent" : "UnAuthedEvent",
 		});
 	}
 
@@ -199,10 +199,21 @@ export class EventLogger {
 		});
 	}
 
-	logEventForCategory(eventName, eventCategory, eventAction, eventLabel, eventProperties) {
+	logEventForCategory(eventCategory, eventAction, eventLabel, eventProperties) {
 		if (this.userAgentIsBot) {
 			return;
 		}
+
+		console.debug("%cEVENT %s", "color: #aaa", eventLabel, {...eventProperties, eventCategory: eventCategory, eventAction: eventAction});
+
+		this._amplitude.logEvent(eventLabel, {...eventProperties, eventCategory: eventCategory, eventAction: eventAction});
+
+		window.ga("send", {
+			hitType: "event",
+			eventCategory: eventCategory || "",
+			eventAction: eventAction || "",
+			eventLabel: eventLabel,
+		});
 	}
 
 	logEventForPage(eventName, pageName, eventProperties) {
@@ -260,9 +271,9 @@ export class EventLogger {
 			if (action.eventName) {
 				if (action.signupChannel) {
 					this.setUserProperty("signup_channel", action.signupChannel);
-					this.logEvent(action.eventName, {error: Boolean(action.resp.Error), signup_channel: action.signupChannel});
+					this.logEventForCategory("auth", "success", action.eventName, {error: Boolean(action.resp.Error), signup_channel: action.signupChannel});
 				} else {
-					this.logEvent(action.eventName, {error: Boolean(action.resp.Error)});
+					this.logEventForCategory("profile", "success", action.eventName, {error: Boolean(action.resp.Error)});
 				}
 			}
 			break;

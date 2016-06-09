@@ -242,7 +242,7 @@ export default class RefsContainer extends Container {
 			newOpenFiles.delete(path);
 		} else {
 			newOpenFiles.add(path);
-			this.context.eventLogger.logEvent("RefsFileExpanded");
+			this.context.eventLogger.logEventForCategory("references", "toggle", "RefsFileExpanded");
 		}
 		this.setState({shownFiles: newOpenFiles});
 	}

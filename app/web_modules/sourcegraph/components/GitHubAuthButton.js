@@ -32,7 +32,7 @@ class GitHubAuthButton extends React.Component {
 		const {url, outline, color, block, children} = this.props;
 		return (
 			<a href={url}
-				onClick={() => this.context.eventLogger.logEvent("InitiateGitHubOAuth2Flow")} {...this.props}>
+				onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow")} {...this.props}>
 				<Button type="button" outline={outline} formNoValidate={true} color={color} block={block}>
 					<GitHubIcon className={type.f4} />&nbsp; {children}
 				</Button>

@@ -125,6 +125,7 @@ export class EventLogger {
 
 			if (authInfo) {
 				if (this._amplitude && authInfo.Login) this._amplitude.setUserId(authInfo.Login || null);
+				if (window.ga && authInfo.Login) window.ga("set", "user_id", authInfo.Login);
 				if (authInfo.UID) this.setIntercomProperty("user_id", authInfo.UID.toString());
 				if (authInfo.IntercomHash) this.setIntercomProperty("user_hash", authInfo.IntercomHash);
 				if (this._fullStory && authInfo.Login) {
@@ -156,33 +157,10 @@ export class EventLogger {
 
 	// sets current user's properties
 	setUserProperty(property, value) {
-		window.ga("set", property, value);
 		this._amplitude.identify(new this._amplitude.Identify().set(property, value));
 	}
 
-	// records events for the current user, if user agent is not bot
-	// isNonInteraction is to filter out ViewEvents
-	logEvent(eventName, eventProperties) {
-		if (this.userAgentIsBot) {
-			return;
-		}
-
-		if (typeof window !== "undefined" && window.localStorage["event-log"]) {
-			console.debug("%cEVENT %s", "color: #aaa", eventName, eventProperties);
-		}
-		this._amplitude.logEvent(eventName, eventProperties);
-
-		window.ga("send", {
-			hitType: "event",
-			eventCategory: "Action",
-			eventAction: eventName,
-			eventLabel: this._user ? "AuthedEvent" : "UnAuthedEvent",
-		});
-	}
-
-	// Use this to fire off VIEW events. Google analytics does not let us send in a dictionary of props so trackers
-	// that are limited should leverage logViewEvent instead of logEvent. Amplitude also does not track "View" events,
-	// they only support "Events"
+	// Use logViewEvent as the default way to log view events for Amplitude and GA
 	logViewEvent(location, page, eventProperties) {
 		if (this.userAgentIsBot) {
 			return;
@@ -199,25 +177,22 @@ export class EventLogger {
 		});
 	}
 
-	logEventForCategory(eventName, eventCategory, eventAction, eventLabel, eventProperties) {
+	// Default tracking call to all of our analytics servies.
+	// Required fields: eventCategory, eventAction, eventCategory
+	// Optional fields: eventProperties
+	// Example Call: logEventForCategory("auth", "success", "SignupCompletion", {signup_channel: GitHub})
+	logEventForCategory(eventCategory, eventAction, eventLabel, eventProperties) {
 		if (this.userAgentIsBot) {
 			return;
 		}
-	}
 
-	logEventForPage(eventName, pageName, eventProperties) {
-		if (!pageName) throw new Error("PageName must be defined");
+		this._amplitude.logEvent(eventLabel, {...eventProperties, eventCategory: eventCategory, eventAction: eventAction});
 
-		let props = eventProperties ? eventProperties : {};
-		props["page_name"] = pageName;
-		this.logEvent(eventName, props);
-	}
-
-	handleOutboundLinkClicks(event) {
-		window.ga("send", "event", {
-			eventCategory: "Outbound Link",
-			eventAction: "click",
-			eventLabel: event.target.href,
+		window.ga("send", {
+			hitType: "event",
+			eventCategory: eventCategory || "",
+			eventAction: eventAction || "",
+			eventLabel: eventLabel,
 		});
 	}
 
@@ -260,9 +235,9 @@ export class EventLogger {
 			if (action.eventName) {
 				if (action.signupChannel) {
 					this.setUserProperty("signup_channel", action.signupChannel);
-					this.logEvent(action.eventName, {error: Boolean(action.resp.Error), signup_channel: action.signupChannel});
+					this.logEventForCategory("auth", "success", action.eventName, {error: Boolean(action.resp.Error), signup_channel: action.signupChannel});
 				} else {
-					this.logEvent(action.eventName, {error: Boolean(action.resp.Error)});
+					this.logEventForCategory("profile", "success", action.eventName, {error: Boolean(action.resp.Error)});
 				}
 			}
 			break;
@@ -273,14 +248,14 @@ export class EventLogger {
 					query: action.query,
 					overlay: action.overlay,
 				};
-				this.logEvent(action.eventName, eventProps);
+				this.logEventForCategory("def", "fetch", action.eventName, eventProps);
 			}
 			break;
 		default:
 			// All dispatched actions to stores will automatically be tracked by the eventName
 			// of the action (if set). Override this behavior by including another case above.
 			if (action.eventName) {
-				this.logEvent(action.eventName);
+				this.logEventForCategory("dispatch", "fetch", action.eventName);
 			}
 			break;
 		}
@@ -374,7 +349,7 @@ export function withViewEventsLogged(Component: ReactClass): ReactClass {
 					this.context.eventLogger.setUserProperty("github_authed", this.props.location.query._githubAuthed);
 				}
 
-				this.context.eventLogger.logEvent(this.props.location.query._event, eventProperties);
+				this.context.eventLogger.logEventForCategory("external", "redirect", this.props.location.query._event, eventProperties);
 
 				// Won't take effect until we call replace below, but prevents this
 				// from being called 2x before the setTimeout block runs.
@@ -417,7 +392,7 @@ export function withViewEventsLogged(Component: ReactClass): ReactClass {
 					referred_by_sourcegraph_editor: location.query["editor_type"],
 				};
 			}
-			// Log GA stuff in here for views.
+
 			const viewName = getViewName(routes);
 			if (viewName) {
 				this.context.eventLogger.logViewEvent(viewName, location.pathname, eventProps);

@@ -45,6 +45,7 @@ class RepoMain extends React.Component {
 
 	static contextTypes = {
 		router: React.PropTypes.object.isRequired,
+		eventLogger: React.PropTypes.object.isRequired,
 	};
 
 	constructor(props) {
@@ -177,14 +178,19 @@ class RepoMain extends React.Component {
 			if (err.response && err.response.status === 401) {
 				msg = `Sign in to add repositories.`;
 			} else if (err.response && err.response.status === 404) {
+				this.context.eventLogger.logEventForCategory("view", "error", "ViewRepoMainError", {repo: this.props.repo, rev: this.props.rev});
 				msg = `Repository not found.`;
 			} else {
 				msg = `Repository is not available.`;
 			}
+
 			return (
-				<Header
-					title={`${httpStatusCode(err)}`}
-					subtitle={msg} />
+				<div>
+				<Helmet title={"Sourcegraph - Not Found"} />
+					<Header
+						title={`${httpStatusCode(err)}`}
+						subtitle={msg} />
+				</div>
 			);
 		}
 

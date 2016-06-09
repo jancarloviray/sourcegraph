@@ -57,7 +57,7 @@ class RefLocationsList extends React.Component {
 						{!this.context.signedIn &&
 							<LocationStateToggleLink styleName="cta-link"
 								location={this.props.location}
-								onClick={() => this.context.eventLogger.logEvent("Conversion_SignInFromRefList")}
+								onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "Conversion_SignInFromRefList")}
 								href="/login"
 								modalName="login">
 								<strong>Sign in</strong> for results from your code
@@ -66,7 +66,7 @@ class RefLocationsList extends React.Component {
 						{this.context.signedIn && noGitHubPrivateReposScope &&
 							<a styleName="cta-link"
 								href={urlToPrivateGitHubOAuth}
-								onClick={() => this.context.eventLogger.logEvent("Conversion_AuthPrivateCodeFromRefList")}>
+								onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "Conversion_AuthPrivateCodeFromRefList")}>
 								<strong>Authorize</strong> to see results from your private code
 							</a>
 						}

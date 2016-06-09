@@ -20,7 +20,7 @@ class ToolComponent extends React.Component {
 	};
 
 	_dismissModal() {
-		this.context.eventLogger.logEvent("ToolBackButtonClicked", {toolType: this.props.location.query.tool});
+		this.context.eventLogger.logEventForCategory("tools", "close", "ToolBackButtonClicked", {toolType: this.props.location.query.tool});
 		this.context.router.replace({...this.props.location, query: ""});
 	}
 

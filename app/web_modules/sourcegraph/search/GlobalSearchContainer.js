@@ -27,12 +27,12 @@ class GlobalSearchContainer extends React.Component {
 	renderCTAButtons() {
 		return (
 			<div className={base.mt4} styleName="inline-block">
-				{!this.context.signedIn && <GitHubAuthButton href={urlToGitHubOAuth} onClick={() => this.context.eventLogger.logEventForPage("InitiateGitHubOAuth2Flow", EventLocation.Dashboard, {scopes: "", upgrade: false})}>Sign in with GitHub</GitHubAuthButton>}
+				{!this.context.signedIn && <GitHubAuthButton href={urlToGitHubOAuth} onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow", {page_name: EventLocation.Dashboard, scopes: "", upgrade: false})}>Sign in with GitHub</GitHubAuthButton>}
 				{this.context.signedIn && !this.context.githubToken &&
-					<GitHubAuthButton href={urlToGitHubOAuth} onClick={() => this.context.eventLogger.logEventForPage("InitiateGitHubOAuth2Flow", EventLocation.Dashboard, {scopes: "", upgrade: true})}>Link GitHub account</GitHubAuthButton>
+					<GitHubAuthButton href={urlToGitHubOAuth} onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow", {page_name: EventLocation.Dashboard, scopes: "", upgrade: true})}>Link GitHub account</GitHubAuthButton>
 				}
 				{this.context.signedIn && this.context.githubToken && (!this.context.githubToken.scope || !(this.context.githubToken.scope.includes("repo") && this.context.githubToken.scope.includes("read:org") && this.context.githubToken.scope.includes("user:email"))) &&
-					<GitHubAuthButton href={urlToPrivateGitHubOAuth} onClick={() => this.context.eventLogger.logEventForPage("InitiateGitHubOAuth2Flow", EventLocation.Dashboard, {scopes: "read:org,repo,user:email", upgrade: true})}>Use with private repositories</GitHubAuthButton>
+					<GitHubAuthButton href={urlToPrivateGitHubOAuth} onClick={() => this.context.eventLogger.logEventForCategory("auth", "click", "InitiateGitHubOAuth2Flow", {page_name: EventLocation.Dashboard, scopes: "read:org,repo,user:email", upgrade: true})}>Use with private repositories</GitHubAuthButton>
 				}
 			</div>
 		);

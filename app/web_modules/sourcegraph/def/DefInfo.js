@@ -132,7 +132,7 @@ class DefInfo extends Container {
 	_onNextPage() {
 		let nextPage = this.state.currPage + 1;
 		this.setState({currPage: nextPage, nextPageLoading: true});
-		this.context.eventLogger.logEvent("RefsPaginatorClicked", {page: nextPage});
+		this.context.eventLogger.logEventForCategory("def_info", "click", "RefsPaginatorClicked", {page: nextPage});
 	}
 
 	render() {
